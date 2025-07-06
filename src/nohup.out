@@ -1,0 +1,3 @@
+using module mode; GOMOD=/home/mu/projects/plumadoro/src/go.mod
+2025/07/05 08:21:29 ListenAndServe localhost:9000: listen tcp 127.0.0.1:9000: bind: address already in use
+using module mode; GOMOD=/home/mu/projects/plumadoro/src/go.mod
