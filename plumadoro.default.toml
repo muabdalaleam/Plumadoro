@@ -1,0 +1,19 @@
+tick_duration = "50ms" # 50ms
+auto_start    = false
+
+[progress_bar]
+padding = 10
+max_width = 70
+border_type = "thick"
+
+focus_color       = "red"
+short_break_color = "green"
+long_break_color  = "cyan"
+pause_color       = "black"
+
+# JUST for testing
+[durations]
+focus = "10s"
+short_break = "6s"
+long_break = "20s"
+# fd = 3
