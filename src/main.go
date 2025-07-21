@@ -5,127 +5,112 @@ package main
 import (
 	"fmt"
 	"os"
-	"plumadoro/config"
-	"plumadoro/pomodoro"
-	"strings"
 	"time"
 
 	// "github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
-type styleID byte
-
-type PlumaModel struct {
-	pomodoro    *pomodoro.PomodoroModel
+type MainModel struct {
+	pomodoro    *PomodoroModel
+	popup       *PopupModel
+	// help        *HelpModel
 
 	height      int  // HACK: i think uint16 is more suitable
 	width       int
-	styles      map[styleID]lipgloss.Style
 
-	errors      []error // errors in this are the non-terminating errors such as failed config loading
+	activeSubmodel Submodel
 }
 
-const (
-	errorStyle styleID = iota
-)
 
-
-func tickEvery(dur time.Duration) tea.Cmd {
-	return tea.Every(dur, func(t time.Time) tea.Msg {
-		return pomodoro.TickMsg(t)
-	})
+func tickLogEvery() tea.Cmd {
+	return tea.Every(LogTickDuration, func(t time.Time) tea.Msg { return LogTickMsg(t) } )
 }
 
-func (pm *PlumaModel) Init() tea.Cmd {
+func tickPomodoroEvery() tea.Cmd {
+	return tea.Every(Config.TickDuration, func(t time.Time) tea.Msg { return PomodoroTickMsg(t) } )
+}
+
+func (m *MainModel) Init() tea.Cmd {
+	var cmd tea.Cmd
+
 	// Loading the config
-	err := config.LoadConfig()
+	// Checking the config errors after the popup model has been intialized
+	err := LoadConfig()
+	m.popup    = &PopupModel{}
+	m.pomodoro = &PomodoroModel{}
+	cmd = m.pomodoro.Init()
 
 	if err != nil {
-		pm.errors = append(pm.errors, err)
+		cmd = tea.Batch(
+			cmd,
+			func() tea.Msg { return PopupMsg{Type: ErrorPopup, Content: err.Error()} },
+		)
 	}
 
-	pm.pomodoro = &pomodoro.PomodoroModel{}
-	pm.pomodoro.Init()
-
-	// TODO: load those styles options from the config
-	pm.styles = map[styleID]lipgloss.Style{}
-
-	pm.styles[errorStyle] = lipgloss.NewStyle().
-		Padding(0, 2).
-		Background(lipgloss.Color("#FF0000")).
-		Foreground(lipgloss.Color("#FFFFFF"))
-
-	return tea.Batch(
-		tickEvery(config.Config.TickDuration),
-		tea.WindowSize(),
-	)
+	return cmd
 }
 
-func (pm *PlumaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd = nil
 
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q", "esc":
-			pm.pomodoro.Quit()
-			cmd = tea.Quit
-
-		case " ":
-			pm.pomodoro.Toggle()
+	switch (m.activeSubmodel) {
+	case m.pomodoro: cmd = m.pomodoro.Update(msg)
+	case m.popup:    cmd = m.popup.Update(msg)
 	}
+
+
+	switch msg := msg.(type) {
+	case InitPomodoroMsg:
+		if m.activeSubmodel != m.pomodoro {
+			cmd = tea.Batch(cmd, func() tea.Msg { return msg } )
+		}
+		m.activeSubmodel = m.pomodoro
+
+	case PopupMsg:
+		if m.activeSubmodel != m.popup {
+			cmd = tea.Batch(cmd, func() tea.Msg { return msg })
+		}
+		m.activeSubmodel = m.popup
 
 	case tea.InterruptMsg, tea.QuitMsg:
-		pm.pomodoro.Quit()
-		cmd = tea.Quit
-
-	case pomodoro.TickMsg:
-		pm.pomodoro.Tick(config.Config.TickDuration)
-		cmd = tickEvery(config.Config.TickDuration)
+		cmd = tea.Batch(cmd, tea.Quit)
 
 	case tea.WindowSizeMsg:
-		pm.width  = msg.Width
-		pm.height = msg.Height
-
-		pm.pomodoro.ProgressBar.Width = msg.Width - int(config.Config.ProgressBar.Padding) * 2 - 4
-		if pm.pomodoro.ProgressBar.Width > int(config.Config.ProgressBar.MaxWidth) {
-			pm.pomodoro.ProgressBar.Width = int(config.Config.ProgressBar.MaxWidth) 
-		}
+		m.width  = msg.Width
+		m.height = msg.Height
 	}
 
-	return pm, cmd
+	return m, cmd
 }
 
-func (pm *PlumaModel) View() string {
+func (m *MainModel) View() string {
 	var s string 
 
 	// Viewing the progressBar with a Remaining time bar
-	s = pm.pomodoro.Render()
-
-	// Centering the view
-	sw, sh := lipgloss.Width(s), lipgloss.Height(s)
-	centerStyle := lipgloss.NewStyle().
-		MarginLeft(max(0, (pm.width-sw)/2)).
-		MarginTop( max(0, (pm.height-sh)/2))
+	switch (m.activeSubmodel) {
+	case m.pomodoro:  s = m.pomodoro.Render()
+	case m.popup:     s = m.popup.Render()
+	}
 	
-	s = centerStyle.Render(s)
+	// Centering the view
+	s = GetCenterStyle(s, uint(m.height), uint(m.width)).
+		Render(s)
 
 	// Viewing the errors.
-	if len(pm.errors) != 0 {
-		var errMsg strings.Builder
-		for _, err := range pm.errors {
-			errMsg.WriteString(err.Error())
-		}
+	// if len(m.errors) != 0 {
+	// 	var errMsg strings.Builder
+	// 	for _, err := range m.errors {
+	// 		errMsg.WriteString(err.Error())
+	// 	}
 
-		s = lipgloss.JoinVertical(
-			lipgloss.Left,
-			s,
-			pm.styles[errorStyle].MarginTop(max(0, (pm.height-sh)/2)).
-				Render(errMsg.String()),
-		)
-	}
+	// 	s = lipgloss.JoinVertical(
+	// 		lipgloss.Left,
+	// 		s,
+	// 		m.styles[errorStyle].MarginTop(max(0, (m.height-sh)/2)).
+	// 			Render(errMsg.String()),
+	// 	)
+	// }
 
 	return s
 }
@@ -133,7 +118,7 @@ func (pm *PlumaModel) View() string {
 
 func main() {
 	// TODO: support command line arguments
-	p := tea.NewProgram(&PlumaModel{},
+	p := tea.NewProgram(&MainModel{},
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),
 	)
