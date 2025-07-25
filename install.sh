@@ -8,7 +8,7 @@ if [ -z ${XDG_CACHE_HOME} ]; then
 	XDG_CACHE_HOME=$HOME/.cache
 fi
 
-plumadoro_config=$XDG_CONFIG_HOME/.plumadoro.toml
+plumadoro_config=$XDG_CONFIG_HOME/plumadoro.toml
 plumadoro_log=$XDG_CACHE_HOME/.plumadoro_log.csv
 
 plumadoro_def_config=./plumadoro.toml

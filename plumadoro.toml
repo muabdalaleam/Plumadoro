@@ -1,13 +1,45 @@
-tick_duration = "50ms" # 50ms
-auto_start    = false
+tick_duration = "20ms"
+max_pause_duration = "500m" 
+auto_start = false
+skipping = true # Allow skipping
+pausing = true # Allow pausing
 
 [progress_bar]
-focus_color       = "red"
+padding = 5 # Padding around the borders
+max_width = 70
+# Possible border types: "rounded", "ascii", "thick", "double", "normal", "hidden"
+border_type = "thick" 
+
+# You can use HEX colors or any of the following options which are loaded from your terminal env:
+# - black
+# - red
+# - green
+# - yellow
+# - blue
+# - magenta
+# - cyan
+# - white
+# - bright_black
+# - bright_red
+# - bright_green
+# - bright_yellow
+# - bright_blue
+# - bright_magenta
+# - bright_cyan
+# - bright_white
+focus_color = "red"
 short_break_color = "green"
-long_break_color  = "cyan"
-pause_color       = "black"
+long_break_color = "cyan"
+pause_color = "black"
+
+# You can make them multiline or single line
+focus_msg = "Let's Focus"
+short_break_msg = "Short break"
+long_break_msg = "You deserve it"
+pause_msg = "Get back to focusing"
 
 [durations]
+# m = minute, h = hour, s = second an example valid duration can be 1h20m20s
 focus = "25m"
 short_break = "5m"
 long_break = "20m"

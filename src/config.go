@@ -54,21 +54,19 @@ var configDir, _ = os.UserConfigDir()
 
 var configPaths = []string{
 	fmt.Sprintf("%s/.plumadoro.toml", homeDir),
-	fmt.Sprintf("%s/.pluma.toml", homeDir),
-	fmt.Sprintf("%s/plumadoro.conf", configDir),
-	fmt.Sprintf("%s/pluma.conf", configDir),
+	fmt.Sprintf("%s/plumadoro.toml", configDir),
 }
  
 var defaultConfig = ConfigT {
 	TickDuration      :  time.Millisecond * 20,
 	MaxPauseDuration  :  time.Minute * 500,
-	Autostart         :  true,
-	Skipping          :  false,
+	Autostart         :  false,
+	Skipping          :  true,
 	Pausing           :  true,
 
 	ProgressBar: ProgressBarConfigT{
 		Padding   : 5,
-		MaxWidth  : 40,
+		MaxWidth  : 70,
 
 		Border          : "normal",
 		FocusColor      : "1",
