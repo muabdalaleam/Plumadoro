@@ -118,6 +118,7 @@ func (m *MainModel) View() string {
 
 func main() {
 	// TODO: support command line arguments
+
 	p := tea.NewProgram(&MainModel{},
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),

@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"time"
-	"github.com/charmbracelet/lipgloss"
+
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
-
 
 // Kickstarts other necessary commands for the pomodoro model (tickers and window resizer)
 type InitPomodoroMsg struct{}
@@ -52,6 +53,7 @@ func (m *PomodoroModel) getPhaseMsg() string {
 	return msg
 }
 
+// HACK: IDK WTH is this
 func (m *PomodoroModel) getPhaseColor() string { 
 	var progressColor string
 	switch (m.phaseType) {
@@ -105,19 +107,26 @@ func (m *PomodoroModel) Update(msg tea.Msg) tea.Cmd {
 			cmd = tea.Quit
 
 		case " ":
-			m.toggle()
+			if !Config.Pausing && m.running {
+				cmd = func() tea.Msg { return PopupMsg{
+					Type: WarningPopup,
+					Content: "Pausing phases is unallowed in your config",
+				}}
+			} else {
+				m.toggle()
+			}
 
 		case "ctrl+r":
 			m.reset()
 
 		case "ctrl+s":
-			if Config.Skipping {
-				m.next()
-			} else {
+			if !Config.Skipping {
 				cmd = func() tea.Msg { return PopupMsg{
 					Type: WarningPopup,
-					Content: "Skipping phases is not allowed.",
+					Content: "Skipping phases is unallowed in your config",
 				}}
+			} else {
+				m.next()
 			}
 	}
 
@@ -162,15 +171,25 @@ func (m *PomodoroModel) Update(msg tea.Msg) tea.Cmd {
 }
 
 func (m *PomodoroModel) Render() string {
-	s := lipgloss.JoinVertical(
-		lipgloss.Center,
-		GetBorderStyle(m.getPhaseColor()).Render(m.progressBar.ViewAs(m.getProgress())),
-		"",
-		fmt.Sprintf("Remaining: %02d:%02d",
-			int(m.remainingTime.Minutes()),
-			int(m.remainingTime.Seconds()) % 60),
-		"",
-		m.getPhaseMsg())
+	phaseColor := m.getPhaseColor()
+	if !m.running {
+		phaseColor = Config.ProgressBar.PauseColor
+	}
+
+	s := GetBorderStyle(phaseColor).Render(
+		lipgloss.JoinVertical(
+			lipgloss.Center,
+			lipgloss.NewStyle().Foreground(lipgloss.Color(phaseColor)).Render(m.getPhaseMsg()), 
+			// make this configurable ^
+			"",
+			m.progressBar.ViewAs(m.getProgress()),
+			"",
+			fmt.Sprintf("Remaining: %02d:%02d | #%d",
+				int(m.remainingTime.Minutes()),
+				int(m.remainingTime.Seconds()) % 60,
+				int(math.Ceil(float64(m.n) / 2.0))),
+			),
+		)
 
 	return s
 }
@@ -206,6 +225,8 @@ func (m *PomodoroModel) reset() {
 
 // It updates the whole state of the PomodoroModel
 func (m *PomodoroModel) next() {
+	PlayAlarm() // HACK: i know this function shouldn't hanle alarms but u know
+
 	// NOTE: be careful n is updated first
 	m.n += 1
 

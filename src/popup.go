@@ -12,8 +12,10 @@ type PopupMsg struct {
 	Content string
 }
 
+type ResetPopupsMsg struct {}
+
 type PopupModel struct {
-	popup   PopupMsg
+	popups   []PopupMsg
 }
 
 const (
@@ -34,32 +36,40 @@ func (m *PopupModel) Update(msg tea.Msg) tea.Cmd {
 		switch msg.String() {
 		case "q", "esc":
 			cmd = func() tea.Msg { return InitPomodoroMsg{} }
+
+		case "ctrl+r":
+			m.popups = []PopupMsg{} // resetting
 		}
 
 	case PopupMsg:
-		m.popup = msg
+		m.popups = append(m.popups, msg)
 	}
 
 	return cmd
 }
 
 func (m *PopupModel) Render() string {
-	var popupStr string
+	var popupsStr string
 
-	switch m.popup.Type { 
-	case ErrorPopup:    popupStr = GetErrorStyle()  .Render(m.popup.Content, "\n")
-	case WarningPopup:  popupStr = GetWarningStyle().Render(m.popup.Content, "\n")
-	case AlarmPopup:    popupStr = GetAlarmStyle()  .Render(m.popup.Content, "\n")
+	for i, popup := range m.popups {
+		newline := "\n\n"
+		if i == len(m.popups) - 1 {
+			newline = ""
+		}
+		switch popup.Type {
+		case ErrorPopup:   popupsStr += GetErrorStyle().Render(popup.Content)   + newline
+		case WarningPopup: popupsStr += GetWarningStyle().Render(popup.Content) + newline
+		case AlarmPopup:   popupsStr += GetAlarmStyle().Render(popup.Content)   + newline
+		}
 	}
+
 
 	content := lipgloss.JoinVertical(lipgloss.Center, "Ooops.", "")
-	if len(popupStr) > 0 {
-		content = lipgloss.JoinVertical(
-			lipgloss.Center,
-			content,
-			lipgloss.JoinVertical(lipgloss.Center, popupStr),
-		)
-	}
+	content = lipgloss.JoinVertical(
+		lipgloss.Center,
+		content,
+		lipgloss.JoinVertical(lipgloss.Center, popupsStr),
+	)
 
 	s := GetBorderStyle(Config.ProgressBar.PauseColor).Render(content)
 

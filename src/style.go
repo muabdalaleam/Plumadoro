@@ -28,7 +28,7 @@ func GetBorderStyle(color string) lipgloss.Style {
 	}
 
 	borderStyle = lipgloss.NewStyle().
-		Padding(1, 2).
+		Padding(1, 1). // XXX: this shouldn't be hardcoded
 		BorderStyle(borderType).
 		BorderForeground(lipgloss.Color(color))
 

@@ -16,6 +16,7 @@ type (
 		MaxPauseDuration   time.Duration   `toml:"max_pause_duration"` // NOTE: this max is per phase
 		Autostart          bool            `toml:"auto_start"`
 		Skipping           bool            `toml:"skipping"` // Allow skipping for phases
+		Pausing            bool            `toml:"pausing"` // Allow pausing
 
 		ProgressBar         ProgressBarConfigT  `toml:"progress_bar"`
 		Durations           DurationsConfigT    `toml:"durations"`
@@ -60,24 +61,25 @@ var configPaths = []string{
  
 var defaultConfig = ConfigT {
 	TickDuration      :  time.Millisecond * 20,
-	MaxPauseDuration  :  time.Minute * 5,
+	MaxPauseDuration  :  time.Minute * 500,
 	Autostart         :  true,
 	Skipping          :  false,
+	Pausing           :  true,
 
 	ProgressBar: ProgressBarConfigT{
 		Padding   : 5,
-		MaxWidth  : 20,
+		MaxWidth  : 40,
 
-		Border          : "thick",
-		FocusColor      : "red",
-		ShortBreakColor : "green",
-		LongBreakColor  : "cyan",
-		PauseColor      : "black",
+		Border          : "normal",
+		FocusColor      : "1",
+		ShortBreakColor : "2",
+		LongBreakColor  : "6",
+		PauseColor      : "0",
 
 		FocusMsg        : "Let's Focus",
-		ShortBreakMsg   : "Don't watch brainrot",
-		LongBreakMsg    : "You deserve it buddy",
-		PauseMsg        : "Stop being lazy, jerk",
+		ShortBreakMsg   : "Short break",
+		LongBreakMsg    : "You deserve it",
+		PauseMsg        : "Get back to focusing",
 	},
 
 	Durations: DurationsConfigT{
@@ -210,7 +212,9 @@ func LoadConfig() error {
 
 	// Autostart doesn't require validation
 
-	// Skipping doesn't require validation too.
+	// Skipping doesn't require validation
+
+	// Pausing doesn't require validation too
 
 	validateRange(&errs, &Config.MaxPauseDuration,
 		time.Minute*0, time.Minute*1000,
@@ -241,19 +245,19 @@ func LoadConfig() error {
 		defaultConfig.ProgressBar.LongBreakColor, "progress_bar.pause_color")
 
 	validateStringLen(&errs, &Config.ProgressBar.FocusMsg,
-		0, 32,
+		0, 1028,
 		defaultConfig.ProgressBar.FocusMsg, "progress_bar.focus_msg")
 
 	validateStringLen(&errs, &Config.ProgressBar.ShortBreakMsg,
-		0, 32,
+		0, 1028,
 		defaultConfig.ProgressBar.ShortBreakMsg, "progress_bar.short_break_msg")
 
 	validateStringLen(&errs, &Config.ProgressBar.LongBreakMsg,
-		0, 32,
+		0, 1028,
 		defaultConfig.ProgressBar.LongBreakMsg, "progress_bar.long_break_msg")
 
 	validateStringLen(&errs, &Config.ProgressBar.PauseMsg,
-		0, 32,
+		0, 1028,
 		defaultConfig.ProgressBar.LongBreakMsg, "progress_bar.pause_msg")
 	
 	validateRange(&errs, &Config.Durations.Focus,
