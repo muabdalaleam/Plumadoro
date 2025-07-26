@@ -1,2 +1,2 @@
-./src/go.sum
-./bin/*
+**/src/go.sum
+**/bin/
