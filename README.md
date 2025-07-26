@@ -11,7 +11,7 @@ A pomodoro terminal app (TUI) written in Go using the bubbletea framework, It su
 configuration throw a dotfile and a `CSV` log file
 
 ## Installation
-You download the repo along with the binary from the releases page (link) to install it do the following:<br>
+You download the repo along with the binary from the [Releases](https://github.com/muabdalaleam/Plumadoro/releases/latest) page to install it do the following:<br>
 ```
 tar -xf plumadoro_<version>.tar.gz
 
@@ -55,11 +55,11 @@ This project is still in beta so it still have a lot of problems any contributio
 How to contribute to this project:
 - Make an issue with your feature request to discuss how to do it
 - Do a pull request with your approaved feature request, or bug fix 
-- Thanks ⭐⭐
+- Thanks ⭐<br>
 *(you don't have to do an issue first if your contribution is a bug fix)*
 
 ## Thanks for
-- [Charmbraclet](https://github.com/charmbracelet), it's contributers
+- [Charmbraclet](https://github.com/charmbracelet) and it's contributers
 - [Burnt sushi](https://github.com/BurntSushi/toml) for the TOML parser
 - [Hajime Hoshi](https://github.com/hajimehoshi) for the MP3 parser
 - YOU for being awesome ❤️
