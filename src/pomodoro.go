@@ -39,7 +39,6 @@ const (
 func (m *PomodoroModel) getPhaseMsg() string {
 	var msg string
 
-	// TODO: add some styling to it
 	if m.running {
 		switch (m.phaseType) {
 		case Focus:        msg = Config.ProgressBar.FocusMsg
@@ -203,7 +202,6 @@ func (m *PomodoroModel) toggle() {
 	}
 }
 
-// TODO: add a maximum pause time
 func (m *PomodoroModel) tick(d time.Duration) {
 	if m.running {
 		m.remainingTime -= d

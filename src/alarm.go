@@ -30,7 +30,7 @@ func PlayAlarm() {
 
 		context, readyChan, err := oto.NewContext(options)
 		if err != nil {
-			return // XXX: User's sound didn't work for whatever reason (not my problem)
+			return // HACK: User's sound didn't work for whatever reason (not my problem)
 		}
 
 		<-readyChan
@@ -42,6 +42,8 @@ func PlayAlarm() {
 		for player.IsPlaying() {
 			time.Sleep(time.Millisecond)
 		}
+
+		player.Close()
 	} ()
 }
 
